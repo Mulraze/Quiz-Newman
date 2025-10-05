@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Quiz - Pregnancy Physiology</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e8e8e8;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --accent: #3498db;
+            --accent-hover: #2980b9;
+            --correct: #27ae60;
+            --incorrect: #e74c3c;
+            --warning: #f39c12;
+            --border: #ddd;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #ecf0f1;
+            --text-secondary: #bdc3c7;
+            --border: #444;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            color: var(--accent);
+            font-size: 1.8em;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .theme-toggle, .reset-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+
+        .theme-toggle:hover, .reset-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .timer {
+            background: var(--bg-tertiary);
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .progress-section {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #5dade2);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .question-dot {
+            width: 45px;
+            height: 45px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .question-dot:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .question-dot.answered {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .question-dot.correct {
+            background: var(--correct);
+            color: white;
+            border-color: var(--correct);
+        }
+
+        .question-dot.incorrect {
+            background: var(--incorrect);
+            color: white;
+            border-color: var(--incorrect);
+        }
+
+        .question-dot.flagged::after {
+            content: '🚩';
+            position: absolute;
+            font-size: 0.7em;
+            margin-top: -25px;
+            margin-left: 15px;
+        }
+
+        .question-dot.current {
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .quiz-section {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow);
+            margin-bottom: 20px;
+            min-height: 400px;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-number {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+
+        .flag-btn {
+            background: none;
+            border: 2px solid var(--border);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s;
+        }
+
+        .flag-btn.flagged {
+            background: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .question-text {
+            font-size: 1.15em;
+            margin-bottom: 25px;
+            line-height: 1.7;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option {
+            background: var(--bg-tertiary);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option:hover {
+            border-color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        .option input[type="radio"] {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+
+        .option.selected {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .option.correct {
+            background: var(--correct);
+            color: white;
+            border-color: var(--correct);
+        }
+
+        .option.incorrect {
+            background: var(--incorrect);
+            color: white;
+            border-color: var(--incorrect);
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .feedback.correct {
+            border-left-color: var(--correct);
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        .feedback.incorrect {
+            border-left-color: var(--incorrect);
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .rationale {
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        .btn-success {
+            background: var(--correct);
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-secondary {
+            background: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #5d6d7e;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .final-score {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--accent);
+            margin: 20px 0;
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .performance-card {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .performance-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .performance-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .category-breakdown {
+            margin: 30px 0;
+        }
+
+        .category-item {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .category-name {
+            font-weight: bold;
+        }
+
+        .category-score {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .category-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .category-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.5s ease;
+        }
+
+        .review-section {
+            margin-top: 30px;
+        }
+
+        .review-question {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--border);
+        }
+
+        .review-question.incorrect {
+            border-left-color: var(--incorrect);
+        }
+
+        .review-question.correct {
+            border-left-color: var(--correct);
+        }
+
+        .history-section {
+            margin-top: 30px;
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .start-screen h2 {
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+
+        .quiz-options {
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .checkbox-group {
+            margin: 20px 0;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .keyboard-hints {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .keyboard-hints kbd {
+            background: var(--bg-primary);
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            font-family: monospace;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.4em;
+            }
+
+            .quiz-section {
+                padding: 20px;
+            }
+
+            .question-grid {
+                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+                gap: 5px;
+            }
+
+            .question-dot {
+                width: 40px;
+                height: 40px;
+                font-size: 0.8em;
+            }
+
+            .final-score {
+                font-size: 2em;
+            }
+
+            .performance-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .celebrate {
+            animation: celebrate 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Medical Quiz: Pregnancy Physiology</h1>
+            <div class="header-controls">
+                <div class="timer" id="timer">⏱️ 00:00:00</div>
+                <button class="theme-toggle" id="themeToggle">🌙 Dark Mode</button>
+                <button class="reset-btn" id="resetBtn">🔄 Reset Quiz</button>
+            </div>
+        </header>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="quiz-section start-screen">
+            <h2>Welcome to the Quiz!</h2>
+            <p>Test your knowledge on pregnancy physiology with 78 questions.</p>
+            
+            <div class="quiz-options">
+                <h3>Quiz Options:</h3>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="shuffleQuestions">
+                        <span>Shuffle Questions</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="shuffleAnswers">
+                        <span>Shuffle Answer Choices</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="startQuizBtn" style="font-size: 1.2em; padding: 15px 40px;">
+                Start Quiz
+            </button>
+
+            <div class="history-section" id="historySection">
+                <h3>Previous Attempts</h3>
+                <div id="historyList"></div>
+            </div>
+
+            <div class="keyboard-hints">
+                <strong>⌨️ Keyboard Shortcuts:</strong><br>
+                <kbd>A</kbd>-<kbd>E</kbd>: Select answer | 
+                <kbd>Enter</kbd>/<kbd>Space</kbd>: Submit | 
+                <kbd>←</kbd><kbd>→</kbd>: Navigate | 
+                <kbd>F</kbd>: Flag question
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progressSection" class="progress-section hidden">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="currentQuestion">1</div>
+                    <div class="stat-label">Current Question</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="answered">0/78</div>
+                    <div class="stat-label">Answered</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="score">0/0</div>
+                    <div class="stat-label">Score</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="percentage">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+            <div class="question-grid" id="questionGrid"></div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quizSection" class="quiz-section hidden">
+            <div class="question-header">
+                <div class="question-number" id="questionNumber">Question 1 of 60</div>
+                <button class="flag-btn" id="flagBtn" title="Flag for review">🚩</button>
+            </div>
+
+            <div class="question-text" id="questionText"></div>
+
+            <div class="options" id="options"></div>
+
+            <div id="feedback" class="feedback hidden"></div>
+
+            <div class="navigation">
+                <button class="btn btn-secondary" id="prevBtn">← Previous</button>
+                <button class="btn btn-primary" id="submitBtn">Submit Answer</button>
+                <button class="btn btn-primary hidden" id="nextBtn">Next →</button>
+                <button class="btn btn-success hidden" id="finishBtn">Finish Quiz</button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section hidden">
+            <div class="results-header">
+                <h2>Quiz Complete! 🎉</h2>
+                <div class="final-score" id="finalScore">0%</div>
+                <p id="scoreMessage"></p>
+            </div>
+
+            <div class="performance-grid">
+                <div class="performance-card">
+                    <h3>Total Score</h3>
+                    <div class="value" id="totalScore">0/78</div>
+                </div>
+                <div class="performance-card">
+                    <h3>Time Taken</h3>
+                    <div class="value" id="timeTaken">00:00</div>
+                </div>
+                <div class="performance-card">
+                    <h3>Correct</h3>
+                    <div class="value" id="correctCount" style="color: var(--correct);">0</div>
+                </div>
+                <div class="performance-card">
+                    <h3>Incorrect</h3>
+                    <div class="value" id="incorrectCount" style="color: var(--incorrect);">0</div>
+                </div>
+            </div>
+
+            <div class="category-breakdown">
+                <h3>Performance by Category</h3>
+                <div id="categoryBreakdown"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 30px 0;">
+                <button class="btn btn-primary" id="reviewAllBtn">Review All Questions</button>
+                <button class="btn btn-secondary" id="reviewIncorrectBtn">Review Incorrect Only</button>
+                <button class="btn btn-success" id="retakeBtn">Retake Quiz</button>
+            </div>
+
+            <div id="reviewSection" class="review-section hidden"></div>
+        </div>
+    </div>
+
+    <!-- Modal for confirmations -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirm</h3>
+            <p id="modalText"></p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+                <button class="btn btn-primary" id="modalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz Data - Parsed from questions #2.txt
+        const quizData = [
+            {q: 1, text: "A CRNA is reviewing the physiological changes of pregnancy. Which statement accurately describes the primary role of the placenta regarding maternal-fetal exchange?", options: ["It primarily serves as a hormonal regulator, with minimal exchange functions.", "It facilitates the exchange of nutrients, gases, and waste products between maternal and fetal circulations.", "It acts as an absolute barrier, preventing any drug transfer from mother to fetus.", "It only allows for the transfer of oxygen and nutrients, while waste is eliminated by the fetal kidneys.", "It's main function is to prevent immunological rejection, with exchange being a secondary role."], correct: 1, rationale: "The correct answer is: It facilitates the exchange of nutrients, gases, and waste products between maternal and fetal circulations. The presentation explicitly states that the placenta allows maternal & fetal circulations to exchange nutrients, gases, & waste essential to fetal growth. [cite: 2]", category: "Placental Physiology", difficulty: "Expert"},
+            {q: 2, text: "During a prenatal assessment, a student asks about the relationship between uterine growth and blood flow. What is the direct relationship between placental growth and uterine blood flow (UBF) during pregnancy?", options: ["Placental growth is independent of uterine blood flow.", "Uterine blood flow decreases as the placenta grows to increase extraction efficiency.", "Placental growth accompanies the increase in uterine blood flow required for fetal development.", "Uterine blood flow remains static, while placental vascularity increases.", "Placental growth is primarily influenced by fetal cardiac output, not UBF."], correct: 2, rationale: "The correct answer is: Placental growth accompanies the increase in uterine blood flow required for fetal development. [cite_start]The slide states that placental growth during pregnancy accompanies the increase in uterine blood flow. [cite: 3]", category: "Placental Physiology", difficulty: "Expert"},
+            {q: 3, text: "When managing a high-risk obstetric patient, which factor is considered one of the most critical determinants of successful maternal-fetal gas exchange?", options: ["Maternal heart rate variability", "Uterine blood flow (UBF)", "Fetal hemoglobin concentration", "Amniotic fluid volume", "Maternal serum glucose levels"], correct: 1, rationale: "The correct answer is: Uterine blood flow (UBF). [cite_start]The presentation identifies Uterine blood flow (UBF) as one of the most important determinants of successful maternal-fetal gas exchange. [cite: 4, 5]", category: "Placental Physiology", difficulty: "Expert"},
+            {q: 4, text: "Based on the anatomical diagram of uterine blood supply, which vessel is the primary source feeding the uterine artery?", options: ["Azygos artery", "Ovarian artery", "External iliac artery", "Hypogastric artery (Internal iliac artery)", "Round ligament artery"], correct: 3, rationale: "The correct answer is: Hypogastric artery (Internal iliac artery). The diagram clearly depicts the uterine artery branching from the larger hypogastric artery.", category: "Uterine Anatomy", difficulty: "Expert"},
+            {q: 5, text: "A CRNA is reviewing uterine anatomy in preparation for a case. In addition to the uterine arteries, which other artery provides a significant collateral blood supply to the uterus, particularly the fundus and adnexa?", options: ["Vaginal arteries", "Azygos artery", "Ovarian artery", "Cervical artery", "Internal pudendal artery"], correct: 2, rationale: "The correct answer is: Ovarian artery. The provided diagram shows the ovarian artery anastomosing with branches that supply the uterine tube and fundus, representing a key collateral blood source.", category: "Uterine Anatomy", difficulty: "Expert"},
+            {q: 6, text: "A CRNA is assessing a term parturient. What is the expected uterine blood flow (UBF) in this patient compared to her non-pregnant state?", options: ["Increases from 200 mL/min to 500 mL/min", "Increases from 50-100 mL/min to 700-900 mL/min", "Remains stable at approximately 300 mL/min throughout pregnancy", "Increases from 150 mL/min to 400-500 mL/min", "Decreases due to placental vascular resistance"], correct: 1, rationale: "The correct answer is: Increases from 50-100 mL/min to 700-900 mL/min. [cite_start]The presentation specifies that UBF increases from a baseline of 50-100 mL/min before pregnancy to 700-900 mL/min at term. [cite: 12]", category: "Uterine Blood Flow Physiology", difficulty: "Expert"},
+            {q: 7, text: "During a case discussion, a student asks about the hemodynamic significance of uterine blood flow (UBF) at term. UBF represents approximately what percentage of the patient's cardiac output at term?", options: ["5%", "8%", "12%", "18%", "25%"], correct: 2, rationale: "The correct answer is: 12%. [cite_start]The presentation states that uterine blood flow is 12% of the cardiac output at term. [cite: 13]", category: "Uterine Blood Flow Physiology", difficulty: "Expert"},
+            {q: 8, text: "A patient with preeclampsia is known to have decreased levels of a key substance that contributes to uterine arterial smooth muscle relaxation. Which substance is this?", options: ["Nitric Oxide", "Endothelin-1", "Angiotensin II", "Prostacyclin", "Thromboxane A2"], correct: 3, rationale: "The correct answer is: Prostacyclin. [cite_start]The presentation hypothesizes that increased prostacyclin contributes to uterine vascular relaxation and explicitly states it is known to be decreased in preeclamptic women. [cite: 15, 16]", category: "Uterine Blood Flow Physiology", difficulty: "Expert"},
+            {q: 9, text: "What is the primary mechanism by which Nitric Oxide (NO) influences uterine blood flow?", options: ["It causes endothelial cell proliferation", "It promotes angiogenesis in the spiral arteries", "It causes vascular smooth muscle relaxation", "It inhibits catecholamine release", "It increases maternal sensitivity to vasopressors"], correct: 2, rationale: "The correct answer is: It causes vascular smooth muscle relaxation. [cite_start]The slide directly states that NO causes vascular smooth muscle relaxation, which would decrease vascular resistance and increase flow. [cite: 17]", category: "Uterine Blood Flow Physiology", difficulty: "Expert"},
+            {q: 10, text: "A CRNA is managing a patient experiencing uterine contractions during labor. According to the determinants of UBF, how do strong, frequent contractions impact uterine blood flow?", options: ["They increase UBF by decreasing uterine venous pressure.", "They decrease UBF by increasing uterine venous pressure and compressing spiral arterioles.", "They have no significant effect on mean UBF over time.", "They increase UBF by causing reflex maternal hypertension.", "They decrease UBF primarily by reducing systemic arterial pressure."], correct: 1, rationale: "The correct answer is: They decrease UBF by increasing uterine venous pressure and compressing spiral arterioles. [cite_start]The presentation lists uterine contractions as a cause of increased uterine venous pressure and also mentions compression of endometrial spiral arterioles, both of which decrease UBF. [cite: 28, 30]", category: "Determinants of UBF", difficulty: "Expert"},
+            {q: 11, text: "A term parturient is placed in the supine position and develops hypotension, lightheadedness, and nausea. This clinical picture is consistent with a decrease in UBF caused by which mechanism?", options: ["Increased endogenous vasoconstrictors", "Decreased uterine arterial pressure due to systemic hypotension from vena cava compression", "Compression of the spiral arterioles independent of contractions", "A vagally mediated decrease in uterine vascular resistance", "An acute increase in uterine venous pressure from uterine relaxation"], correct: 1, rationale: "The correct answer is: Decreased uterine arterial pressure due to systemic hypotension from vena cava compression. [cite_start]Supine hypotension syndrome is given as an example of systemic hypotension that decreases UBF by reducing uterine perfusion pressure. [cite: 25, 26, 28]", category: "Determinants of UBF", difficulty: "Expert"},
+            {q: 12, text: "Which of the following formulas correctly represents the determinants of uterine blood flow (UBF)?", options: ["UBF = (Mean Arterial Pressure) / (Uterine Vascular Resistance)", "UBF = (Uterine Arterial Pressure – Uterine Venous Pressure) / Uterine Vascular Resistance", "UBF = (Cardiac Output) x (Uterine Vascular Resistance)", "UBF = (Uterine Venous Pressure) / (Uterine Arterial Pressure)", "UBF = (Systemic Vascular Resistance) - (Uterine Vascular Resistance)"], correct: 1, rationale: "The correct answer is: UBF = (Uterine Arterial Pressure – Uterine Venous Pressure) / Uterine Vascular Resistance. [cite_start]The presentation explicitly provides this formula for UBF. [cite: 21, 22]", category: "Determinants of UBF", difficulty: "Expert"},
+            {q: 13, text: "A laboring patient is instructed to perform a prolonged Valsalva maneuver during pushing. This action can adversely affect UBF primarily by:", options: ["Decreasing uterine vascular resistance.", "Causing systemic hypertension.", "Increasing uterine venous pressure.", "Releasing endogenous vasodilators.", "Decreasing maternal heart rate."], correct: 2, rationale: "The correct answer is: Increasing uterine venous pressure. [cite_start]The Valsalva maneuver is listed as a cause of increased uterine venous pressure, which in turn decreases the perfusion gradient and reduces UBF. [cite: 28]", category: "Determinants of UBF", difficulty: "Expert"},
+            {q: 14, text: "A parturient with severe preeclampsia and significant labor pain (10/10) is hypertensive and tachycardic. An epidural is placed, and she reports excellent pain relief. What is the most likely immediate effect on UBF?", options: ["A decrease in UBF due to sympathetic blockade.", "No change in UBF, as epidurals do not affect uterine circulation.", "An increase in UBF due to decreased circulating catecholamines.", "A sharp decrease in UBF due to local anesthetic toxicity.", "An increase in UBF due to suppression of prostacyclin."], correct: 2, rationale: "The correct answer is: An increase in UBF due to decreased circulating catecholamines. The presentation states that effective pain relief from epidural analgesia is associated with a decrease in circulating catecholamines, which increases UBF. [cite_start]In preeclampsia, it may also increase intervillous blood flow. [cite: 33, 34, 36]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 15, text: "What is the primary mechanism by which spinal or epidural anesthesia can lead to a *decrease* in uterine blood flow?", options: ["Direct vasoconstriction of the uterine artery by local anesthetics.", "Suppression of the parasympathetic nervous system.", "Maternally-induced hypotension from sympathetic blockade.", "Increased uterine tone caused by the anesthetic.", "Release of endogenous vasoconstrictors."], correct: 2, rationale: "The correct answer is: Maternally-induced hypotension from sympathetic blockade. [cite_start]The presentation explicitly states that spinal and epidural anesthesia may decrease UBF as a result of hypotension. [cite: 38]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 16, text: "In a patient with severe preeclampsia, how might epidural analgesia uniquely improve placental perfusion beyond what is seen in a normotensive patient?", options: ["By increasing maternal heart rate.", "By causing significant vasodilation of the uterine arteries.", "By increasing circulating catecholamines.", "By suppressing sympathomimetic activity and potentially increasing intervillous blood flow.", "By decreasing uterine contractions."], correct: 3, rationale: "The correct answer is: By suppressing sympathomimetic activity and potentially increasing intervillous blood flow. [cite_start]The slide notes that in a woman with severe preeclampsia, an epidural may increase intervillous blood flow through the suppression of sympathomimetic activity. [cite: 36, 37]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 17, text: "A CRNA adds fentanyl to an epidural solution for a laboring patient who remains normotensive. What is the expected effect of the epidural fentanyl on UBF?", options: ["It will decrease UBF due to systemic absorption.", "It will increase UBF by causing uterine relaxation.", "It will have no effect on UBF.", "It will cause a transient but significant decrease in UBF.", "It will increase UBF by decreasing uterine venous pressure."], correct: 2, rationale: "The correct answer is: It will have no effect on UBF. [cite_start]The presentation states that when opioids like fentanyl, sufentanil, and morphine are administered with an epidural, they have no effect on UBF. [cite: 43, 44]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 18, text: "A patient receives intrathecal sufentanil for a C-section and subsequently develops hypotension. How might the spinal sufentanil affect UBF in this scenario?", options: ["It will directly increase UBF.", "It could decrease UBF secondary to the hypotension.", "It has no potential to affect UBF.", "It will increase UBF by reducing uterine vascular resistance.", "It will decrease UBF through direct uterine artery vasoconstriction."], correct: 1, rationale: "The correct answer is: It could decrease UBF secondary to the hypotension. [cite_start]The slide indicates that opioids like sufentanil and meperidine, when administered with a spinal, could decrease UBF due to hypotension. [cite: 45, 46]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 19, text: "When considering the addition of epinephrine to an epidural test dose for a healthy parturient, what does the evidence suggest regarding its effect on UBF?", options: ["It consistently decreases UBF by 20% in all patients.", "It increases UBF due to beta-2 adrenergic effects.", "There is no evidence that absorbed epinephrine from epidural solutions affects UBF in healthy women.", "It causes a profound and dangerous increase in uterine vascular resistance.", "Its use is contraindicated due to guaranteed fetal distress."], correct: 2, rationale: "The correct answer is: There is no evidence that absorbed epinephrine from epidural solutions affects UBF in healthy women. [cite_start]The presentation explicitly states this finding but advises caution in preeclamptic women. [cite: 48, 49]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 20, text: "A CRNA is treating hypotension in a term parturient. According to the presentation, why has ephedrine traditionally been considered the vasopressor of choice in obstetrics?", options: ["It causes potent, direct alpha-1 vasoconstriction, raising blood pressure rapidly.", "It does not cross the placenta, protecting the fetus from exposure.", "It increases blood pressure primarily by increasing cardiac output with less direct vasoconstriction.", "It significantly decreases uterine vascular resistance.", "It is a pure beta-agonist with no alpha effects."], correct: 2, rationale: "The correct answer is: It increases blood pressure primarily by increasing cardiac output with less direct vasoconstriction. [cite_start]The slide states that ephedrine is more likely to increase BP by increasing CO with less direct vasoconstriction, highlighting its protective effect on UBF. [cite: 54, 55]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 21, text: "A colleague questions the long-held preference for ephedrine over phenylephrine, citing newer studies. What criticism of older studies comparing phenylephrine and ephedrine is mentioned in the presentation?", options: ["The studies failed to measure fetal pH.", "The studies used sub-therapeutic doses of ephedrine.", "The studies were flawed because they compared large bolus doses of phenylephrine to small, titrated doses.", "The studies did not include preeclamptic patients.", "The studies incorrectly showed phenylephrine increased uterine vascular resistance."], correct: 2, rationale: "The correct answer is: The studies were flawed because they compared large bolus doses of phenylephrine to small, titrated doses. [cite_start]The presentation notes that early studies were flawed and specifically mentions the use of large doses of phenylephrine versus small titrated doses. [cite: 57, 58]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 22, text: "Despite potential flaws in early research, what adverse effect on uterine circulation was demonstrated in a study of phenylephrine mentioned in the presentation?", options: ["Decreased uterine venous pressure", "Increased intervillous blood flow", "No change in UBF", "Increased uterine vascular resistance", "Decreased uterine arterial pressure"], correct: 3, rationale: "The correct answer is: Increased uterine vascular resistance. [cite_start]The slide explicitly states that a study showed increased uterine vascular resistance with phenylephrine use. [cite: 59]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 23, text: "A patient undergoing a C-section requires general anesthesia. An induction dose of propofol is administered, leading to a 30% drop in blood pressure. What is the effect of propofol on UBF in this situation?", options: ["Propofol has a direct, potent vasoconstrictive effect on uterine arteries, decreasing UBF.", "Propofol has a minimal direct effect, but UBF will decrease secondary to the reduction in maternal blood pressure.", "Propofol increases UBF by causing uterine relaxation.", "Propofol has no effect on UBF, regardless of maternal hemodynamics.", "UBF will increase due to a reflex tachycardia."], correct: 1, rationale: "The correct answer is: Propofol has a minimal direct effect, but UBF will decrease secondary to the reduction in maternal blood pressure. [cite_start]The presentation states that propofol, etomidate, ketamine, and barbiturates have minimal direct effects but will reduce UBF if they cause a decrease in maternal BP. [cite: 63, 64, 65]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 24, text: "A CRNA is maintaining anesthesia for a C-section with sevoflurane at 1.0 MAC. The patient's blood pressure is stable. What is the expected effect of sevoflurane on UBF at this concentration?", options: ["A significant dose-dependent decrease in UBF.", "No effect on UBF.", "A significant increase in UBF.", "A 50% reduction in uterine vascular resistance.", "A decrease in UBF due to uterine hypertonus."], correct: 1, rationale: "The correct answer is: No effect on UBF. [cite_start]The presentation indicates that when clinical doses (0.5-1.5 MAC) of inhalation agents are used and hemodynamics are stable, there is no effect on UBF. [cite: 67, 68]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 25, text: "During a prolonged and difficult C-section, the anesthesia provider increases the concentration of desflurane to 2.0 MAC to ensure immobility, which results in significant hypotension. This deep plane of anesthesia is associated with what effect on UBF?", options: ["An increase in UBF due to profound uterine relaxation.", "No change in UBF as it is autoregulated.", "A decrease in maternal BP, CO, and UBF.", "An improvement in placental perfusion.", "A decrease in uterine tone without affecting blood flow."], correct: 2, rationale: "The correct answer is: A decrease in maternal BP, CO, and UBF. [cite_start]Deeper planes of anesthesia are explicitly associated with decreased maternal BP, cardiac output (CO), and uterine blood flow (UBF). [cite: 70]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 26, text: "What is a primary clinical concern related to the dose-dependent reduction in uterine tone caused by inhalation agents at concentrations greater than 0.5 MAC during a C-section?", options: ["Difficulty with fetal extraction.", "Increased maternal awareness.", "Potential for increased blood loss.", "Interference with surgical closure.", "Neonatal respiratory depression."], correct: 2, rationale: "The correct answer is: Potential for increased blood loss. [cite_start]The presentation states that inhalation agents produce a dose-dependent reduction in uterine tone (>0.5 MAC) and that this may affect blood loss during a C-section. [cite: 71, 72, 73]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 27, text: "A parturient under general anesthesia experiences an acute airway obstruction leading to marked hypoxemia and hypercapnia. How will this physiological disturbance likely affect UBF?", options: ["UBF will increase due to peripheral vasodilation.", "UBF will not be affected by changes in blood gas tensions.", "UBF may be reduced due to activation of the sympathetic nervous system.", "UBF will increase to compensate for the reduced oxygen content.", "UBF may be reduced due to direct suppression of myocardial contractility."], correct: 2, rationale: "The correct answer is: UBF may be reduced due to activation of the sympathetic nervous system. [cite_start]The slide states that marked hypoxemia and hypercapnia may reduce UBF by activating the SNS. [cite: 78]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 28, text: "During a C-section under general anesthesia, the patient is being mechanically hyperventilated to a PaCO₂ of 25 mmHg. What is the expected consequence of this intervention on uterine blood flow?", options: ["A significant increase in UBF due to respiratory alkalosis.", "No change in UBF, as it is independent of maternal PaCO₂.", "A decrease in UBF.", "An increase in UBF due to cerebral vasoconstriction and shunting of blood.", "A variable effect depending on the anesthetic agent used."], correct: 2, rationale: "The correct answer is: A decrease in UBF. [cite_start]The presentation makes a direct statement that mechanical hyperventilation causes a decrease in UBF. [cite: 79]", category: "Anesthesia Effects on UBF", difficulty: "Expert"},
+            {q: 29, text: "In the event of acute intrapartum hypoxia, which of the following is NOT a compensatory mechanism employed by the fetus?", options: ["Vasoconstriction of nonessential vascular beds.", "Redistribution of blood flow to vital organs like the brain and heart.", "A significant increase in oxygen consumption to improve extraction.", "A decrease in overall oxygen consumption.", "Shunting of blood to the adrenal glands."], correct: 2, rationale: "The correct answer is: A significant increase in oxygen consumption to improve extraction. [cite_start]The fetus compensates for hypoxia by *decreasing* O₂ consumption, not increasing it. [cite: 84, 85]", category: "Placental Physiology", difficulty: "Expert"},
+            {q: 30, text: "A CRNA recognizes that maintaining adequate placental function is paramount for fetal well-being. What is identified as one of the MOST important determinants of placental function?", options: ["Maternal hematocrit", "Uterine blood flow (UBF)", "Maternal blood pressure alone", "Fetal heart rate", "Amniotic fluid index"], correct: 1, rationale: "The correct answer is: Uterine blood flow (UBF). [cite_start]The slide explicitly states that UBF is one of the MOST important determinants of placental function. [cite: 83]", category: "Placental Physiology", difficulty: "Expert"},
+            {q: 31, text: "During a challenging delivery with signs of fetal distress, the fetus initiates a physiological response to hypoxia. This involves redistributing blood flow to which set of vital organs?", options: ["Lungs, liver, and kidneys", "Brain, heart, and adrenal glands", "Skeletal muscle and skin", "Gastrointestinal tract and spleen", "Placenta and umbilical cord"], correct: 1, rationale: "The correct answer is: Brain, heart, and adrenal glands. [cite_start]The presentation mentions redistribution of blood flow to vital organs as a compensatory mechanism, and these are the classically defined vital organs in this context. [cite: 87]", category: "Placental Physiology", difficulty: "Expert"},
+            {q: 32, text: "What is the approximate blood volume capacity of the intervillous space in the maternal portion of the placenta?", options: ["100 mL", "200 mL", "350 mL", "500 mL", "750 mL"], correct: 2, rationale: "The correct answer is: 350 mL. [cite_start]The slide on maternal placental anatomy states that the intervillous space can hold 350 mL of blood. [cite: 93]", category: "Placental Anatomy", difficulty: "Expert"},
+            {q: 33, text: "Which maternal vessels are directly responsible for feeding blood into the intervillous space of the placenta?", options: ["Uterine veins", "Arcuate arteries", "Radial arteries", "Spiral arteries", "Ovarian arteries"], correct: 3, rationale: "The correct answer is: Spiral arteries. [cite_start]The presentation specifies that the spiral arteries feed the placenta. [cite: 90]", category: "Placental Anatomy", difficulty: "Expert"},
+            {q: 34, text: "The primary site for all maternal-fetal physiological exchange within the placenta occurs in which structures?", options: ["The chorionic plate", "The basal plate", "The intervillous space itself", "The terminal villi", "The spiral arteries"], correct: 3, rationale: "The correct answer is: The terminal villi. [cite_start]The slide states that the terminal villi are where placental exchange occurs. [cite: 94, 95]", category: "Placental Anatomy", difficulty: "Expert"},
+            {q: 35, text: "A CRNA is explaining the anatomy of the umbilical cord to a student. Which statement correctly describes the number and function of the umbilical vessels?", options: ["Two umbilical veins carry oxygenated blood to the fetus; one artery carries deoxygenated blood away.", "One umbilical vein carries deoxygenated blood away; two arteries carry oxygenated blood to the fetus.", "Two umbilical arteries carry deoxygenated blood to the placenta; one umbilical vein carries oxygenated blood to the fetus.", "One umbilical artery carries deoxygenated blood to the placenta; two umbilical veins carry oxygenated blood to the fetus.", "All three vessels carry mixed venous-arterial blood."], correct: 2, rationale: "The correct answer is: Two umbilical arteries carry deoxygenated blood to the placenta; one umbilical vein carries oxygenated blood to the fetus. [cite_start]The presentation states there are 2 umbilical arteries that move fetal blood to the placenta and 1 umbilical vein that returns blood to the fetus. [cite: 99, 100, 101, 102]", category: "Placental Anatomy", difficulty: "Expert"},
+            {q: 36, text: "What is the direction of blood flow within the two umbilical arteries?", options: ["From the placenta to the fetal heart.", "From the fetal aorta to the placenta.", "From the maternal spiral arteries to the fetus.", "From the fetal liver to the placenta.", "From the fetal lungs to the placenta."], correct: 1, rationale: "The correct answer is: From the fetal aorta to the placenta. [cite_start]The two umbilical arteries are responsible for moving fetal blood *within the umbilical cord to the placenta* for re-oxygenation and waste removal. [cite: 100]", category: "Placental Anatomy", difficulty: "Expert"},
+            {q: 37, text: "The placenta possesses a metabolic barrier function that can reduce fetal exposure to certain drugs. This is partly accomplished by the presence of which enzyme system?", options: ["Monoamine oxidase (MAO)", "Cholinesterase", "Catechol-O-methyltransferase (COMT)", "Cytochrome P450 (CYP-450)", "Alcohol dehydrogenase"], correct: 3, rationale: "The correct answer is: Cytochrome P450 (CYP-450). [cite_start]The presentation mentions that CYP-450 found in the placenta reduces fetal exposure to substances. [cite: 107]", category: "Placental Function", difficulty: "Expert"},
+            {q: 38, text: "In addition to its barrier and exchange functions, the placenta serves a crucial endocrine role by releasing which two primary hormones?", options: ["Testosterone and Aldosterone", "Cortisol and ACTH", "Estrogen and Progesterone", "TSH and Thyroxine", "hCG and Prolactin"], correct: 2, rationale: "The correct answer is: Estrogen and Progesterone. [cite_start]The slide on hormonal function explicitly states that the placenta releases estrogen and progesterone. [cite: 109]", category: "Placental Function", difficulty: "Expert"},
+            {q: 39, text: "Most anesthetic drugs cross the placenta from mother to fetus. By which primary mechanism of transport does this occur?", options: ["Active Transport", "Pinocytosis", "Facilitated Diffusion", "Bulk Flow", "Simple Diffusion"], correct: 4, rationale: "The correct answer is: Simple Diffusion. [cite_start]The presentation clearly states that most anesthesia drugs are transported by diffusion. [cite: 112, 113]", category: "Placental Exchange", difficulty: "Expert"},
+            {q: 40, text: "How are large molecules, such as immunoglobulins, transported across the placental barrier to the fetus?", options: ["Simple Diffusion", "Active Transport", "Bulk Flow", "Pinocytosis", "Membrane Breaks"], correct: 3, rationale: "The correct answer is: Pinocytosis. [cite_start]The slide lists pinocytosis as the mechanism for the transport of large molecules like immunoglobulins. [cite: 116]", category: "Placental Exchange", difficulty: "Expert"},
+            {q: 41, text: "Rh sensitization, where fetal red blood cells enter the maternal circulation, is an example of which type of placental 'exchange'?", options: ["Active Transport", "Diffusion", "Pinocytosis", "Bulk Flow", "Breaks in the placental membrane"], correct: 4, rationale: "The correct answer is: Breaks in the placental membrane. [cite_start]The presentation uses Rh sensitization as an example of what occurs when breaks in the placental membrane cause mixing of maternal and fetal blood. [cite: 117, 118]", category: "Placental Exchange", difficulty: "Expert"},
+            {q: 42, text: "Which of the following substances relies on active transport, typically coupled with sodium exchange, to cross the placenta?", options: ["Respiratory gases", "Water", "Amino acids", "Most anesthetic drugs", "Fatty acids"], correct: 2, rationale: "The correct answer is: Amino acids. [cite_start]The presentation specifies that amino acids, vitamins, and some ions use active transport for placental exchange. [cite: 115, 133]", category: "Placental Exchange", difficulty: "Expert"},
+            {q: 43, text: "Under normal physiological conditions, what is the approximate maximum partial pressure of oxygen (PO₂) in the fetal arterial blood?", options: ["20-30 mmHg", "35-45 mmHg", "50-60 mmHg", "70-80 mmHg", "90-100 mmHg"], correct: 2, rationale: "The correct answer is: 50-60 mmHg. [cite_start]The presentation states that the maximum fetal arterial PO₂ is never greater than 50-60 mmHg. [cite: 124]", category: "Gas and Nutrient Transfer", difficulty: "Expert"},
+            {q: 44, text: "The transfer of carbon dioxide from fetus to mother is complex. Which of the following is NOT a form in which CO₂ is transferred across the placenta?", options: ["Dissolved CO₂", "Carbonic acid (H₂CO₃)", "Bicarbonate ion (HCO₃)", "Carbaminohemoglobin", "Free gaseous CO₂"], correct: 4, rationale: "The correct answer is: Free gaseous CO₂. [cite_start]The presentation lists dissolved CO₂, carbonic acid, bicarbonate ion, carbonate ion, and carbaminohemoglobin as forms of transfer, but not free gas. [cite: 126, 127, 128]", category: "Gas and Nutrient Transfer", difficulty: "Expert"},
+            {q: 45, text: "How does the placenta facilitate the transfer of amino acids to the fetus?", options: ["Simple diffusion down a concentration gradient.", "An active process involving exchange with Na+.", "Bulk flow with water.", "Pinocytosis.", "Facilitated diffusion independent of ion exchange."], correct: 1, rationale: "The correct answer is: An active process involving exchange with Na+. [cite_start]The slide indicates that amino acids undergo an active transport process by exchange with Na+. [cite: 133]", category: "Gas and Nutrient Transfer", difficulty: "Expert"},
+            {q: 46, text: "Glucose is vital for fetal development. Which of these is NOT a method by which the fetus acquires glucose via the placenta?", options: ["Simple diffusion", "Active transport against a concentration gradient", "Use of D-glucose transport proteins", "Direct production of glucose by the placenta", "Facilitated diffusion"], correct: 1, rationale: "The correct answer is: Active transport against a concentration gradient. [cite_start]The presentation lists simple diffusion, D-glucose transport proteins (a form of facilitated diffusion), and placental glucose production as transfer mechanisms, but not active transport. [cite: 130, 131]", category: "Gas and Nutrient Transfer", difficulty: "Expert"},
+            {q: 47, text: "When comparing the placental transfer of atropine and glycopyrrolate, which drug exhibits a significantly higher fetal-maternal (F/M) ratio, and what does this indicate?", options: ["Glycopyrrolate; it indicates greater placental transfer.", "Atropine; it indicates greater placental transfer.", "Glycopyrrolate; it indicates lesser placental transfer.", "Atropine; it indicates lesser placental transfer.", "Both have an F/M ratio near 1.0, indicating equal transfer."], correct: 1, rationale: "The correct answer is: Atropine; it indicates greater placental transfer. [cite_start]The presentation gives an example of atropine having a high F/M ratio (0.93) versus glycopyrrolate (0.22) and states that a higher ratio indicates greater placental transfer. [cite: 139, 140]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 48, text: "The fetal-maternal (F/M) ratio is a key concept in obstetric pharmacology. A drug with a high F/M ratio signifies what?", options: ["The drug is extensively metabolized by the fetus.", "The drug has a low degree of placental transfer.", "The drug has a high degree of placental transfer.", "The drug is highly protein-bound in the maternal circulation.", "The drug is rapidly cleared by the placenta."], correct: 2, rationale: "The correct answer is: The drug has a high degree of placental transfer. [cite_start]The slide directly states that the higher the F/M ratio, the greater the placental transfer. [cite: 139]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 49, text: "What combination of factors ultimately determines the final maternal and fetal concentrations of a drug administered during labor?", options: ["Only the administered maternal dose.", "Only the rate of placental blood flow.", "Drug metabolism in the mother, placenta, and fetus, plus changes during delivery.", "Only the lipid solubility of the drug.", "Only the degree of maternal protein binding."], correct: 2, rationale: "The correct answer is: Drug metabolism in the mother, placenta, and fetus, plus changes during delivery. [cite_start]The presentation provides this comprehensive list of factors that determine drug concentrations. [cite: 141]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 50, text: "A CRNA administers sufentanil, a highly lipid-soluble opioid, to a parturient. What is a potential consequence of its high lipid solubility on placental transfer?", options: ["It will be completely blocked from crossing the placenta.", "It may penetrate the placenta easily but then become trapped in the placental tissue.", "It will be rapidly transferred to the fetus with no placental accumulation.", "Its transfer will be solely dependent on maternal protein binding.", "It will require active transport to cross the placenta."], correct: 1, rationale: "The correct answer is: It may penetrate the placenta easily but then become trapped in the placental tissue. [cite_start]The presentation uses sufentanil as an example of a highly lipid-soluble drug that may penetrate the placenta easily but then becomes trapped. [cite: 148, 149, 150]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 51, text: "When comparing bupivacaine and lidocaine, which statement accurately reflects their protein binding and subsequent placental transfer?", options: ["Lidocaine has greater protein binding, resulting in less placental transfer.", "Bupivacaine has greater protein binding, resulting in less placental transfer.", "Both have minimal protein binding and transfer equally.", "Bupivacaine has less protein binding, resulting in greater placental transfer.", "Protein binding does not affect the placental transfer of local anesthetics."], correct: 1, rationale: "The correct answer is: Bupivacaine has greater protein binding, resulting in less placental transfer. [cite_start]The presentation states that highly protein-bound drugs diffuse poorly and that bupivacaine and ropivacaine have greater protein binding than lidocaine. [cite: 153, 154]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 52, text: "Which of the following drug characteristics would lead to the LEAST amount of placental transfer?", options: ["High lipid solubility, low molecular weight, unionized", "Low lipid solubility, low protein binding, unionized", "High lipid solubility, high protein binding, ionized", "Low lipid solubility, high protein binding, ionized", "High lipid solubility, low protein binding, unionized"], correct: 3, rationale: "The correct answer is: Low lipid solubility, high protein binding, ionized. The presentation indicates that high lipid solubility, low protein binding, and a nonionized state promote transfer. [cite_start]Therefore, the opposite characteristics would limit transfer. [cite: 147, 153]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 53, text: "A fetus becomes acidemic during a prolonged second stage of labor. A CRNA gives the mother repeated doses of an epidural local anesthetic, which is a weak base. What phenomenon is likely to occur?", options: ["The drug will be prevented from crossing the placenta due to the pH gradient.", "The drug will become trapped in the maternal circulation.", "The drug will cross to the fetus and become ionized, accumulating in the fetal circulation (Ion Trapping).", "The drug's metabolism by the placenta will be significantly accelerated.", "The drug will have a reduced anesthetic effect on the mother."], correct: 2, rationale: "The correct answer is: The drug will cross to the fetus and become ionized, accumulating in the fetal circulation (Ion Trapping). [cite_start]The presentation describes that fetal acidemia enhances the transfer of basic drugs like local anesthetics and opioids, a phenomenon known as 'Ion Trapping'. [cite: 159, 160, 161]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 54, text: "A drug's pKa is a crucial determinant of its placental transfer because it dictates what property at physiologic pH?", options: ["The lipid solubility of the drug.", "The fraction of the drug that is nonionized.", "The degree of protein binding.", "The molecular weight of the drug.", "The rate of metabolism by the placenta."], correct: 1, rationale: "The correct answer is: The fraction of the drug that is nonionized. [cite_start]The slide explicitly states that pKa determines the fraction of drug that is nonionized at physiologic pH, which is the fraction that readily crosses lipid membranes. [cite: 157]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 55, text: "Aside from specific drug properties like pKa and protein binding, the placental transfer of most anesthetic drugs is passively mediated and therefore highly dependent on what factor?", options: ["Maternal heart rate", "Amniotic fluid volume", "Placental and uterine blood flow rates", "Maternal temperature", "Gestational age"], correct: 2, rationale: "The correct answer is: Placental and uterine blood flow rates. [cite_start]The presentation notes that most anesthetic drugs are passively transferred, with flow rates affecting the amount of drug that crosses the placenta. [cite: 162]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 56, text: "Why do inhalational anesthetics like sevoflurane and desflurane rapidly cross the placenta and appear in the fetal circulation?", options: ["They are actively transported.", "They are large, ionized molecules.", "Due to their high lipid solubility and low molecular weight.", "They are highly protein-bound in the maternal plasma.", "They are transported via pinocytosis."], correct: 2, rationale: "The correct answer is: Due to their high lipid solubility and low molecular weight. [cite_start]The slide states that rapid transfer occurs due to their lipid solubility and low molecular weight. [cite: 165, 166]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 57, text: "A patient requires general anesthesia for an emergency C-section. After induction, approximately how long does it take for the inhalational agent to be delivered to the fetus?", options: ["Less than 1 minute", "2-3 minutes", "Within 10 minutes", "15-20 minutes", "Over 30 minutes"], correct: 2, rationale: "The correct answer is: Within 10 minutes. [cite_start]The presentation states that delivery to the fetus occurs within 10 minutes. [cite: 167]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 58, text: "A CRNA is using nitrous oxide as part of the anesthetic for a C-section. What is a specific hemodynamic effect of N₂O on the fetus?", options: ["It increases fetal central vascular resistance by 30%.", "It decreases fetal central vascular resistance by 30%.", "It causes profound fetal bradycardia.", "It has no effect on fetal vascular resistance.", "It significantly increases fetal blood pressure."], correct: 1, rationale: "The correct answer is: It decreases fetal central vascular resistance by 30%. [cite_start]The slide specifies that N₂O decreases fetal central vascular resistance by 30%. [cite: 171]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 59, text: "What is a potential adverse neonatal outcome that can occur during the rapid elimination of nitrous oxide after delivery?", options: ["Hyperthermia", "Hypertension", "Diffusion hypoxia", "Methemoglobinemia", "Seizures"], correct: 2, rationale: "The correct answer is: Diffusion hypoxia. [cite_start]The presentation warns that diffusion hypoxia may occur during the rapid elimination of N₂O from the neonate. [cite: 173]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 60, text: "A CRNA is planning general anesthesia for a C-section in a patient who is severely hypovolemic from a placental abruption. Which induction agent is specifically mentioned as being useful in this clinical context?", options: ["Propofol", "Etomidate", "Thiopental", "Ketamine", "Midazolam"], correct: 3, rationale: "The correct answer is: Ketamine. [cite_start]The presentation identifies ketamine as being used for C-sections in patients who are hypovolemic or asthmatic. [cite: 180, 181]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 61, text: "The use of which intravenous induction agent for C-sections has been associated with low Apgar scores in neonates according to studies mentioned in the presentation?", options: ["Ketamine", "Etomidate", "Propofol", "Thiopental", "Methohexital"], correct: 2, rationale: "The correct answer is: Propofol. [cite_start]The slide on propofol states that studies have shown a low Apgar score in neonates after its use. [cite: 184]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 62, text: "The placental transfer of barbiturates like thiopental is highly dependent on what factor?", options: ["Maternal temperature", "Plasma protein concentration", "Fetal heart rate", "Maternal PaCO₂", "Amniotic fluid pH"], correct: 1, rationale: "The correct answer is: Plasma protein concentration. [cite_start]The presentation notes that barbiturates are freely diffusible and are dependent on protein concentration for transfer across the placenta. [cite: 179]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 63, text: "A patient reveals she took a dose of diazepam for anxiety before coming to the hospital for her scheduled C-section. Why are benzodiazepines generally avoided in pregnant women?", options: ["They are fully ionized and do not cross the placenta.", "They are unionized and highly lipophilic, allowing them to cross the placenta readily.", "They cause uterine hypertonus and reduce UBF.", "They are known teratogens in the third trimester.", "They are rapidly metabolized by the placenta, rendering them ineffective."], correct: 1, rationale: "The correct answer is: They are unionized and highly lipophilic, allowing them to cross the placenta readily. [cite_start]The presentation describes benzodiazepines with these properties, explaining why they cross the placenta readily and are avoided. [cite: 188, 189, 190]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 64, text: "Which opioid is specifically associated with a higher sensitivity in newborns regarding its respiratory depressant effects compared to other opioids?", options: ["Fentanyl", "Sufentanil", "Remifentanil", "Morphine", "Meperidine"], correct: 3, rationale: "The correct answer is: Morphine. [cite_start]The slide states that newborns are more sensitive to the respiratory depressant effects of Morphine compared to other opioids. [cite: 192]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 65, text: "The administration of which opioid during labor is particularly noted for its association with both neonatal CNS and respiratory depression?", options: ["Morphine", "Fentanyl", "Meperidine", "Hydromorphone", "Remifentanil"], correct: 2, rationale: "The correct answer is: Meperidine. [cite_start]The presentation explicitly links meperidine with neonatal CNS and respiratory depression. [cite: 193]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 66, text: "What fundamental chemical property of muscle relaxants like rocuronium and succinylcholine prevents them from crossing the placenta in significant amounts?", options: ["They are highly lipid soluble.", "They have a very low molecular weight.", "They are fully ionized at physiologic pH.", "They are extensively protein-bound.", "They are rapidly metabolized in the maternal bloodstream."], correct: 2, rationale: "The correct answer is: They are fully ionized at physiologic pH. [cite_start]The presentation states that muscle relaxants are fully ionized and therefore do not cross the placenta. [cite: 197]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 67, text: "A CRNA needs to administer an anticholinergic agent to a parturient and wants to minimize fetal effects. Which agent would be the best choice based on its placental transfer characteristics?", options: ["Atropine", "Scopolamine", "Glycopyrrolate", "Hyoscyamine", "Ipratropium"], correct: 2, rationale: "The correct answer is: Glycopyrrolate. [cite_start]The presentation explains that anticholinergic transfer correlates with blood-brain barrier crossing; atropine and scopolamine cross, while glycopyrrolate is poorly transferred across the placenta. [cite: 200, 201]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 68, text: "Why do anticholinesterases like neostigmine have limited transfer across the placenta?", options: ["They are highly lipid soluble.", "They are quaternary ammonium compounds that are ionized at physiologic pH.", "They have a very low molecular weight.", "They are rapidly metabolized by the placenta.", "They are extensively bound to maternal plasma proteins."], correct: 1, rationale: "The correct answer is: They are quaternary ammonium compounds that are ionized at physiologic pH. [cite_start]The slide identifies this chemical property as the reason for their limited placental transfer. [cite: 203, 204]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 69, text: "A CRNA is treating a hypertensive emergency in a preeclamptic patient. Which of the following antihypertensive agents crosses the placenta and can produce fetal vasodilation?", options: ["Esmolol", "Labetalol", "Hydralazine", "Nitroprusside", "Nifedipine"], correct: 2, rationale: "The correct answer is: Hydralazine. [cite_start]The presentation states that hydralazine is frequently used in preeclamptic women, crosses the placenta, and produces fetal vasodilation. [cite: 211, 212, 213]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 70, text: "The use of nitroprusside for severe maternal hypertension carries a specific risk for the fetus due to the production of what toxic byproduct?", options: ["Thiocyanate", "Methemoglobin", "Cyanide", "Formaldehyde", "Carbon monoxide"], correct: 2, rationale: "The correct answer is: Cyanide. [cite_start]The slide warns that nitroprusside is lipid soluble, rapidly crosses the placenta, and its breakdown produces cyanide. [cite: 215, 216]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 71, text: "A patient with preeclampsia is being treated with an ACE inhibitor. What is the primary fetal organ system that is adversely affected by this class of medication?", options: ["Cardiac", "Pulmonary", "Hepatic", "Renal", "Neurologic"], correct: 3, rationale: "The correct answer is: Renal. [cite_start]The presentation states that ACE inhibitors cross the placenta and affect fetal renal function. [cite: 221, 222]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 72, text: "In addition to its direct effects on the mother, what is a secondary effect of nitroglycerine related to uterine tone?", options: ["It causes profound uterine vasoconstriction.", "Placental tissue production of NO causes uterine relaxation.", "It has no effect on uterine tone.", "It causes uterine hypertonus.", "It sensitizes the uterus to oxytocin."], correct: 1, rationale: "The correct answer is: Placental tissue production of NO causes uterine relaxation. [cite_start]The slide on nitroglycerine notes that placental tissue production of NO causes uterine relaxation. [cite: 219]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 73, text: "A parturient has a history of deep vein thrombosis and requires anticoagulation during pregnancy. Which of the following is the most appropriate agent due to its lack of placental transfer?", options: ["Warfarin", "Apixaban", "Rivaroxaban", "Heparin", "Dabigatran"], correct: 3, rationale: "The correct answer is: Heparin. [cite_start]The presentation states that heparin does not cross the placenta, in contrast to warfarin which is contraindicated in the first trimester. [cite: 236, 238]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 74, text: "What is the primary reason for the contraindication of warfarin during the first trimester of pregnancy?", options: ["It causes maternal hypertension.", "It has a high rate of fetal loss and congenital abnormalities.", "It does not effectively anticoagulate the mother.", "It is rapidly metabolized by the placenta.", "It can cause precipitous labor."], correct: 1, rationale: "The correct answer is: It has a high rate of fetal loss and congenital abnormalities. [cite_start]The slide specifies that warfarin is associated with an increased rate of fetal loss and congenital abnormalities and is contraindicated in the 1st trimester. [cite: 235, 236]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 75, text: "A patient with a history of cocaine abuse presents in labor. The CRNA must be aware that cocaine is a potent vasoconstrictor and has what characteristic regarding placental transfer?", options: ["It is poorly transferred across the placenta.", "It is rapidly transferred across the placenta.", "It is completely metabolized by the placenta.", "It does not cross the placenta due to high ionization.", "Its transfer is slow and insignificant."], correct: 1, rationale: "The correct answer is: It is rapidly transferred across the placenta. [cite_start]The presentation states that cocaine is rapidly transferred across the placenta. [cite: 231]", category: "Pharmacology and Drug Transfer", difficulty: "Expert"},
+            {q: 76, text: "The final conclusion of the presentation summarizes the key factors that promote the maternal-to-fetal transfer of drugs. Which of the following characteristics would ENHANCE drug transfer?", options: ["High molecular weight", "Increased maternal protein binding", "Greater ionization", "Greater lipid solubility", "Decreased maternal-fetal gradient"], correct: 3, rationale: "The correct answer is: Greater lipid solubility. [cite_start]The conclusion slide lists greater lipid solubility, along with lower molecular weight, less ionization, decreased maternal protein binding, and an increased maternal-fetal gradient as factors that promote transfer. [cite: 244]", category: "Pharmacology Principles", difficulty: "Expert"},
+            {q: 77, text: "What is the fundamental process by which most drugs cross the placenta from mother to fetus?", options: ["Active transport against a gradient.", "Pinocytosis.", "Diffusion down a concentration gradient.", "Facilitated transport via protein carriers.", "Membrane disruption."], correct: 2, rationale: "The correct answer is: Diffusion down a concentration gradient. [cite_start]The conclusion slide reiterates that most drugs cross the placenta by diffusion down a concentration gradient from mother to fetus or vice versa. [cite: 242]", category: "Pharmacology Principles", difficulty: "Expert"},
+            {q: 78, text: "Based on the information provided in the presentation, what is the general consensus on the teratogenicity of commonly used anesthetic agents?", options: ["All inhalation agents are known teratogens.", "Opioids are the most significant teratogens.", "Anesthetic agents are not considered teratogens.", "Only local anesthetics are confirmed teratogens.", "Teratogenicity is dose-dependent and a high risk with all agents."], correct: 2, rationale: "The correct answer is: Anesthetic agents are not considered teratogens. [cite_start]The final concluding point on the slide is that anesthetic agents are not teratogens. [cite: 245]", category: "Anesthetic Safety", difficulty: "Expert"}
+        ];
+
+        // Quiz State
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let flaggedQuestions = new Set();
+        let quizStartTime = null;
+        let timerInterval = null;
+        let shuffleQuestions = false;
+        let shuffleAnswers = false;
+        let quizQuestions = [];
+        let quizHistory = [];
+
+        // DOM Elements
+        const startScreen = document.getElementById('startScreen');
+        const progressSection = document.getElementById('progressSection');
+        const quizSection = document.getElementById('quizSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const modal = document.getElementById('modal');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuizHistory();
+            displayHistory();
+            setupEventListeners();
+            loadSavedProgress();
+        });
+
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Start quiz
+            document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
+            
+            // Navigation
+            document.getElementById('prevBtn').addEventListener('click', () => navigateQuestion(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => navigateQuestion(1));
+            document.getElementById('submitBtn').addEventListener('click', submitAnswer);
+            document.getElementById('finishBtn').addEventListener('click', finishQuiz);
+            
+            // Flag
+            document.getElementById('flagBtn').addEventListener('click', toggleFlag);
+            
+            // Reset
+            document.getElementById('resetBtn').addEventListener('click', () => showModal('Reset Quiz', 'Are you sure you want to reset the quiz? All progress will be lost.', resetQuiz));
+            
+            // Results buttons
+            document.getElementById('reviewAllBtn').addEventListener('click', () => reviewQuestions(false));
+            document.getElementById('reviewIncorrectBtn').addEventListener('click', () => reviewQuestions(true));
+            document.getElementById('retakeBtn').addEventListener('click', retakeQuiz);
+            
+            // Modal
+            document.getElementById('modalCancel').addEventListener('click', hideModal);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboard);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            
+            const btn = document.getElementById('themeToggle');
+            btn.textContent = newTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+            
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function startQuiz() {
+            shuffleQuestions = document.getElementById('shuffleQuestions').checked;
+            shuffleAnswers = document.getElementById('shuffleAnswers').checked;
+            
+            // Prepare questions
+            quizQuestions = [...quizData];
+            if (shuffleQuestions) {
+                quizQuestions = shuffleArray(quizQuestions);
+            }
+            
+            // Shuffle answers if needed
+            if (shuffleAnswers) {
+                quizQuestions = quizQuestions.map(q => shuffleOptions(q));
+            }
+            
+            // Reset state
+            currentQuestionIndex = 0;
+            userAnswers = new Array(quizQuestions.length).fill(null);
+            flaggedQuestions = new Set();
+            quizStartTime = Date.now();
+            
+            // Start timer
+            startTimer();
+            
+            // Show quiz
+            startScreen.classList.add('hidden');
+            progressSection.classList.remove('hidden');
+            quizSection.classList.remove('hidden');
+            
+            // Build question grid
+            buildQuestionGrid();
+            
+            // Display first question
+            displayQuestion();
+            
+            // Save progress
+            saveProgress();
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function shuffleOptions(question) {
+            const indices = [0, 1, 2, 3, 4];
+            const shuffledIndices = shuffleArray(indices);
+            
+            return {
+                ...question,
+                options: shuffledIndices.map(i => question.options[i]),
+                correct: shuffledIndices.indexOf(question.correct),
+                originalCorrect: question.correct
+            };
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - quizStartTime;
+                const hours = Math.floor(elapsed / 3600000);
+                const minutes = Math.floor((elapsed % 3600000) / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                document.getElementById('timer').textContent = 
+                    `⏱️ ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function buildQuestionGrid() {
+            const grid = document.getElementById('questionGrid');
+            grid.innerHTML = '';
+            
+            quizQuestions.forEach((q, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'question-dot';
+                dot.textContent = index + 1;
+                dot.addEventListener('click', () => jumpToQuestion(index));
+                grid.appendChild(dot);
+            });
+        }
+
+        function displayQuestion() {
+            const question = quizQuestions[currentQuestionIndex];
+            const userAnswer = userAnswers[currentQuestionIndex];
+            
+            // Update question number
+            document.getElementById('questionNumber').textContent = 
+                `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            
+            // Update question text
+            document.getElementById('questionText').textContent = question.text;
+            
+            // Update flag button
+            const flagBtn = document.getElementById('flagBtn');
+            flagBtn.classList.toggle('flagged', flaggedQuestions.has(currentQuestionIndex));
+            
+            // Build options
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'answer';
+                radio.value = index;
+                radio.id = `option${index}`;
+                
+                if (userAnswer !== null) {
+                    radio.disabled = true;
+                    optionDiv.classList.add('disabled');
+                    
+                    if (index === question.correct) {
+                        optionDiv.classList.add('correct');
+                    } else if (index === userAnswer.answer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                }
+                
+                if (userAnswer && index === userAnswer.answer) {
+                    radio.checked = true;
+                    optionDiv.classList.add('selected');
+                }
+                
+                const label = document.createElement('label');
+                label.htmlFor = `option${index}`;
+                label.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                label.style.cursor = userAnswer ? 'not-allowed' : 'pointer';
+                label.style.flex = '1';
+                
+                optionDiv.appendChild(radio);
+                optionDiv.appendChild(label);
+                
+                if (!userAnswer) {
+                    optionDiv.addEventListener('click', () => {
+                        radio.checked = true;
+                        document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+                        optionDiv.classList.add('selected');
+                    });
+                }
+                
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // Show/hide feedback
+            const feedback = document.getElementById('feedback');
+            if (userAnswer) {
+                const isCorrect = userAnswer.answer === question.correct;
+                feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+                feedback.innerHTML = `
+                    <div class="feedback-title">${isCorrect ? '✅ Correct!' : '❌ Incorrect'}</div>
+                    <div><strong>Correct Answer:</strong> ${String.fromCharCode(65 + question.correct)}. ${question.options[question.correct]}</div>
+                    <div class="rationale"><strong>Rationale:</strong> ${question.rationale}</div>
+                    <div style="margin-top: 10px;"><strong>Category:</strong> ${question.category} | <strong>Difficulty:</strong> ${question.difficulty}</div>
+                `;
+                feedback.classList.remove('hidden');
+            } else {
+                feedback.classList.add('hidden');
+            }
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const finishBtn = document.getElementById('finishBtn');
+            
+            if (userAnswer) {
+                submitBtn.classList.add('hidden');
+                if (currentQuestionIndex === quizQuestions.length - 1) {
+                    nextBtn.classList.add('hidden');
+                    finishBtn.classList.remove('hidden');
+                } else {
+                    nextBtn.classList.remove('hidden');
+                    finishBtn.classList.add('hidden');
+                }
+            } else {
+                submitBtn.classList.remove('hidden');
+                nextBtn.classList.add('hidden');
+                finishBtn.classList.add('hidden');
+            }
+            
+            // Update progress
+            updateProgress();
+            updateQuestionGrid();
+        }
+
+        function submitAnswer() {
+            const selected = document.querySelector('input[name="answer"]:checked');
+            if (!selected) {
+                alert('Please select an answer');
+                return;
+            }
+            
+            const question = quizQuestions[currentQuestionIndex];
+            const answerIndex = parseInt(selected.value);
+            const isCorrect = answerIndex === question.correct;
+            
+            userAnswers[currentQuestionIndex] = {
+                answer: answerIndex,
+                correct: isCorrect,
+                timestamp: Date.now()
+            };
+            
+            // Add animation
+            const quizSectionEl = document.getElementById('quizSection');
+            if (isCorrect) {
+                quizSectionEl.classList.add('celebrate');
+                setTimeout(() => quizSectionEl.classList.remove('celebrate'), 500);
+            } else {
+                quizSectionEl.classList.add('shake');
+                setTimeout(() => quizSectionEl.classList.remove('shake'), 500);
+            }
+            
+            // Redisplay question with feedback
+            displayQuestion();
+            
+            // Save progress
+            saveProgress();
+        }
+
+        function navigateQuestion(direction) {
+            const newIndex = currentQuestionIndex + direction;
+            if (newIndex >= 0 && newIndex < quizQuestions.length) {
+                currentQuestionIndex = newIndex;
+                displayQuestion();
+                saveProgress();
+            }
+        }
+
+        function jumpToQuestion(index) {
+            currentQuestionIndex = index;
+            displayQuestion();
+            saveProgress();
+        }
+
+        function toggleFlag() {
+            if (flaggedQuestions.has(currentQuestionIndex)) {
+                flaggedQuestions.delete(currentQuestionIndex);
+            } else {
+                flaggedQuestions.add(currentQuestionIndex);
+            }
+            updateQuestionGrid();
+            displayQuestion();
+            saveProgress();
+        }
+
+        function updateProgress() {
+            const answered = userAnswers.filter(a => a !== null).length;
+            const correct = userAnswers.filter(a => a && a.correct).length;
+            const percentage = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+            
+            document.getElementById('answered').textContent = `${answered}/${quizQuestions.length}`;
+            document.getElementById('score').textContent = `${correct}/${answered}`;
+            document.getElementById('percentage').textContent = `${percentage}%`;
+            
+            const progress = (answered / quizQuestions.length) * 100;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = `${progress}%`;
+            progressBar.textContent = `${Math.round(progress)}%`;
+        }
+
+        function updateQuestionGrid() {
+            const dots = document.querySelectorAll('.question-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.remove('current', 'answered', 'correct', 'incorrect', 'flagged');
+                
+                if (index === currentQuestionIndex) {
+                    dot.classList.add('current');
+                }
+                
+                if (userAnswers[index]) {
+                    dot.classList.add(userAnswers[index].correct ? 'correct' : 'incorrect');
+                } else if (userAnswers[index] !== null) {
+                    dot.classList.add('answered');
+                }
+                
+                if (flaggedQuestions.has(index)) {
+                    dot.classList.add('flagged');
+                }
+            });
+        }
+
+        function finishQuiz() {
+            const unanswered = userAnswers.filter(a => a === null).length;
+            
+            if (unanswered > 0) {
+                showModal(
+                    'Finish Quiz',
+                    `You have ${unanswered} unanswered question(s). Are you sure you want to finish?`,
+                    showResults
+                );
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            hideModal();
+            clearInterval(timerInterval);
+            
+            // Hide quiz sections
+            progressSection.classList.add('hidden');
+            quizSection.classList.add('hidden');
+            
+            // Show results
+            resultsSection.classList.remove('hidden');
+            
+            // Calculate stats
+            const answered = userAnswers.filter(a => a !== null).length;
+            const correct = userAnswers.filter(a => a && a.correct).length;
+            const incorrect = answered - correct;
+            const percentage = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+            const elapsedTime = Date.now() - quizStartTime;
+            
+            // Display final score
+            document.getElementById('finalScore').textContent = `${percentage}%`;
+            document.getElementById('totalScore').textContent = `${correct}/${answered}`;
+            document.getElementById('correctCount').textContent = correct;
+            document.getElementById('incorrectCount').textContent = incorrect;
+            
+            const minutes = Math.floor(elapsedTime / 60000);
+            const seconds = Math.floor((elapsedTime % 60000) / 1000);
+            document.getElementById('timeTaken').textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+            
+            // Score message
+            let message = '';
+            if (percentage >= 90) message = 'Outstanding! 🏆';
+            else if (percentage >= 80) message = 'Great job! 🎉';
+            else if (percentage >= 70) message = 'Good work! 👍';
+            else if (percentage >= 60) message = 'Not bad, keep practicing! 📚';
+            else message = 'Keep studying! 💪';
+            document.getElementById('scoreMessage').textContent = message;
+            
+            // Category breakdown
+            displayCategoryBreakdown();
+            
+            // Save to history
+            saveToHistory({
+                date: new Date().toLocaleString(),
+                score: correct,
+                total: answered,
+                percentage: percentage,
+                time: `${minutes}:${String(seconds).padStart(2, '0')}`
+            });
+            
+            // Clear saved progress
+            localStorage.removeItem('quizProgress');
+        }
+
+        function displayCategoryBreakdown() {
+            const breakdown = {};
+            
+            quizQuestions.forEach((q, index) => {
+                if (!breakdown[q.category]) {
+                    breakdown[q.category] = { correct: 0, total: 0 };
+                }
+                
+                if (userAnswers[index]) {
+                    breakdown[q.category].total++;
+                    if (userAnswers[index].correct) {
+                        breakdown[q.category].correct++;
+                    }
+                }
+            });
+            
+            const container = document.getElementById('categoryBreakdown');
+            container.innerHTML = '';
+            
+            Object.entries(breakdown)
+                .sort((a, b) => b[1].correct / b[1].total - a[1].correct / a[1].total)
+                .forEach(([category, stats]) => {
+                    const percentage = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+                    
+                    const item = document.createElement('div');
+                    item.className = 'category-item';
+                    item.innerHTML = `
+                        <div class="category-header">
+                            <div class="category-name">${category}</div>
+                            <div class="category-score">${stats.correct}/${stats.total} (${percentage}%)</div>
+                        </div>
+                        <div class="category-bar">
+                            <div class="category-bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+        }
+
+        function reviewQuestions(incorrectOnly) {
+            const reviewSection = document.getElementById('reviewSection');
+            reviewSection.innerHTML = '<h3>' + (incorrectOnly ? 'Review Incorrect Answers' : 'Review All Questions') + '</h3>';
+            reviewSection.classList.remove('hidden');
+            
+            quizQuestions.forEach((q, index) => {
+                const answer = userAnswers[index];
+                if (!answer || (incorrectOnly && answer.correct)) return;
+                
+                const div = document.createElement('div');
+                div.className = `review-question ${answer.correct ? 'correct' : 'incorrect'}`;
+                div.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 10px;">Question ${index + 1}: ${q.text}</div>
+                    <div style="margin: 5px 0;"><strong>Your answer:</strong> ${String.fromCharCode(65 + answer.answer)}. ${q.options[answer.answer]}</div>
+                    <div style="margin: 5px 0;"><strong>Correct answer:</strong> ${String.fromCharCode(65 + q.correct)}. ${q.options[q.correct]}</div>
+                    <div style="margin: 10px 0; padding: 10px; background: var(--bg-primary); border-radius: 5px;">${q.rationale}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9em;"><strong>Category:</strong> ${q.category} | <strong>Difficulty:</strong> ${q.difficulty}</div>
+                `;
+                reviewSection.appendChild(div);
+            });
+            
+            reviewSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function retakeQuiz() {
+            resultsSection.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        function resetQuiz() {
+            hideModal();
+            clearInterval(timerInterval);
+            
+            // Reset all sections
+            progressSection.classList.add('hidden');
+            quizSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            
+            // Reset state
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            flaggedQuestions = new Set();
+            quizStartTime = null;
+            
+            // Clear saved progress
+            localStorage.removeItem('quizProgress');
+        }
+
+        function saveProgress() {
+            const progress = {
+                currentQuestionIndex,
+                userAnswers,
+                flaggedQuestions: Array.from(flaggedQuestions),
+                quizStartTime,
+                shuffleQuestions,
+                shuffleAnswers,
+                quizQuestions
+            };
+            localStorage.setItem('quizProgress', JSON.stringify(progress));
+        }
+
+        function loadSavedProgress() {
+            const saved = localStorage.getItem('quizProgress');
+            if (saved) {
+                const progress = JSON.parse(saved);
+                
+                // Ask if user wants to continue
+                if (confirm('You have a quiz in progress. Do you want to continue?')) {
+                    currentQuestionIndex = progress.currentQuestionIndex;
+                    userAnswers = progress.userAnswers;
+                    flaggedQuestions = new Set(progress.flaggedQuestions);
+                    quizStartTime = progress.quizStartTime;
+                    shuffleQuestions = progress.shuffleQuestions;
+                    shuffleAnswers = progress.shuffleAnswers;
+                    quizQuestions = progress.quizQuestions;
+                    
+                    startScreen.classList.add('hidden');
+                    progressSection.classList.remove('hidden');
+                    quizSection.classList.remove('hidden');
+                    
+                    buildQuestionGrid();
+                    displayQuestion();
+                    startTimer();
+                } else {
+                    localStorage.removeItem('quizProgress');
+                }
+            }
+            
+            // Load theme
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            const btn = document.getElementById('themeToggle');
+            btn.textContent = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+        }
+
+        function saveToHistory(attempt) {
+            quizHistory.unshift(attempt);
+            if (quizHistory.length > 10) quizHistory.pop();
+            localStorage.setItem('quizHistory', JSON.stringify(quizHistory));
+            displayHistory();
+        }
+
+        function loadQuizHistory() {
+            const saved = localStorage.getItem('quizHistory');
+            if (saved) {
+                quizHistory = JSON.parse(saved);
+            }
+        }
+
+        function displayHistory() {
+            const container = document.getElementById('historyList');
+            if (quizHistory.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No previous attempts</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            quizHistory.forEach((attempt, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span>${attempt.date}</span>
+                    <span><strong>${attempt.percentage}%</strong> (${attempt.score}/${attempt.total}) - ${attempt.time}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function handleKeyboard(e) {
+            if (modal.classList.contains('show')) return;
+            if (startScreen.classList.contains('hidden') === false) return;
+            if (resultsSection.classList.contains('hidden') === false) return;
+            
+            // A-E for answers
+            if (e.key >= 'a' && e.key <= 'e') {
+                const index = e.key.charCodeAt(0) - 97;
+                const option = document.getElementById(`option${index}`);
+                if (option && !option.disabled) {
+                    option.checked = true;
+                    option.closest('.option').click();
+                }
+            }
+            
+            // Arrow keys for navigation
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigateQuestion(-1);
+            }
+            if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                e.preventDefault();
+                const userAnswer = userAnswers[currentQuestionIndex];
+                if (userAnswer) {
+                    navigateQuestion(1);
+                } else {
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (!submitBtn.classList.contains('hidden')) {
+                        submitAnswer();
+                    }
+                }
+            }
+            
+            // Space for submit
+            if (e.key === ' ') {
+                e.preventDefault();
+                const submitBtn = document.getElementById('submitBtn');
+                if (!submitBtn.classList.contains('hidden')) {
+                    submitAnswer();
+                }
+            }
+            
+            // F for flag
+            if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleFlag();
+            }
+        }
+
+        function showModal(title, text, onConfirm) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            document.getElementById('modalConfirm').onclick = onConfirm;
+            modal.classList.add('show');
+        }
+
+        function hideModal() {
+            modal.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
